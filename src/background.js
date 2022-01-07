@@ -1,6 +1,6 @@
 "use strict";
 
-import { app, protocol, BrowserWindow, Menu, Tray, nativeImage } from "electron";
+import { app, protocol, BrowserWindow, Menu, Tray, dialog, screen } from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 const isDevelopment = process.env.NODE_ENV !== "production";
@@ -14,9 +14,10 @@ let mainWindow;
 
 async function createWindow() {
     // Create the browser window.
+    const {width, height} = screen.getPrimaryDisplay().workAreaSize;
     mainWindow = new BrowserWindow({
-        width: 800,
-        height: 600,
+        width: width/2,
+        height: height/2,
         webPreferences: {
 
             // Use pluginOptions.nodeIntegration, leave this alone
@@ -70,10 +71,8 @@ function createMenu() {
 }
 
 // 系统托盘
-function tray(){
-    // const icon = nativeImage.createFromPath("/logo.png")
-    // tray = new Tray(icon);
-    tray = new Tray('./logo.png');
+function tray() {
+    tray = new Tray('./public/favicon.ico');
     const contextMenu = Menu.buildFromTemplate([
         {
             role: "minimize",
@@ -93,7 +92,8 @@ function tray(){
             role: "quit",
             label: "退出",
             click: () => {
-                app.quit();
+                // app.quit();
+                dialogs();
             }
         }
     ]);
@@ -103,6 +103,25 @@ function tray(){
     })
     tray.on('click', () => {
         mainWindow.show()
+    })
+}
+
+// 对话框
+function dialogs() {
+    dialog.showMessageBox(mainWindow, {
+      type: "info",
+      title: "退出" + app.name,
+      defaultId: 0,
+      cancelId: 1,
+      icon: './public/favicon.ico',
+      message: "确认退出吗?",
+      buttons: ['退出', "取消"]
+    }).then( r => {
+      if (r.response === 0) {
+        app.exit();
+      } else {
+        console.log(r.response)
+      }
     })
 }
 
@@ -138,6 +157,7 @@ app.on("ready", async () => {
     }
     createWindow();
     tray();
+    // dialogs();
 });
 
 // Exit cleanly on request from parent process in development mode.
